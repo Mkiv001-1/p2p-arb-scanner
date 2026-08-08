@@ -1,55 +1,67 @@
 #!/usr/bin/env python3
 """
-Multi-exchange P2P Arbitrage Scanner (Binance + OKX)
-Finds: (1) intra-exchange BUY vs SELL spreads, (2) cross-exchange arb:
-buy USDT cheap on OKX P2P, sell on Binance P2P (or vice versa).
-All prices in same fiat. Reports net spread after fees (~0.5% assumed).
+P2P Arbitrage Scanner — Bybit + OKX (Binance blocked in jurisdiction).
+Finds intra-exchange BUY vs SELL spreads + cross-exchange arb across fiats.
+Robust MAD outlier filter. Reports net spread after ~1% fees.
 """
-import json, time, urllib.request, urllib.parse
+import json, time, urllib.request
 
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"}
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+FIATS = ["RUB", "KZT", "UAH", "TRY", "VND", "BYN", "GEL", "AZN", "KGS", "AMD",
+         "KES", "TZS", "PLN", "EUR", "USD", "NGN", "INR", "BRL", "ARS"]
 
-FIATS = ["RUB", "KZT", "UAH", "TRY", "VND", "BYN", "GEL", "AZN", "KGS", "AMD", "KES", "TZS", "PLN", "EUR", "USD", "NGN"]
+# ── Bybit ──────────────────────────────────────────────────────
+def bybit_p2p(fiat, side, token="USDT", rows=10):
+    """side: '0' = BUY USDT (lowest wins), '1' = SELL USDT (highest wins)"""
+    body = {
+        "userId": "", "tokenId": token, "currencyId": fiat,
+        "payment": [], "side": side, "size": str(rows), "page": "1",
+        "amount": "", "authMaker": False, "canTrade": False,
+    }
+    req = urllib.request.Request("https://api2.bybit.com/fiat/otc/item/online",
+        data=json.dumps(body).encode(),
+        headers={**UA, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            d = json.loads(r.read().decode())
+    except Exception:
+        return []
+    items = []
+    for item in d.get("result", {}).get("items", []):
+        try:
+            items.append({
+                "price": float(item["price"]),
+                "amount": float(item.get("quantity", 0)),
+            })
+        except (TypeError, ValueError, KeyError):
+            continue
+    return items
 
-def _post(url, body):
-    req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                 headers={**UA, "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read().decode())
-
-def _get(url):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read().decode())
-
-def binance_p2p(fiat, trade_type):
-    """trade_type: BUY = buying USDT (lowest price wins); SELL = selling USDT (highest wins)"""
-    d = _post("https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search",
-              {"page": 1, "rows": 5, "payTypes": [], "countries": [], "publisherType": None,
-               "asset": "USDT", "fiat": fiat, "tradeType": trade_type})
-    prices = []
-    for a in d.get("data", []):
-        adv = a.get("adv", {})
-        prices.append({"price": float(adv["price"]), "amount": float(adv.get("surplusAmount", 0))})
-    return prices
-
+# ── OKX ─────────────────────────────────────────────────────────
 def okx_p2p(fiat, side):
-    """side: buy = buy USDT; sell = sell USDT"""
+    """side: 'buy' = buy USDT, 'sell' = sell USDT"""
     url = ("https://www.okx.com/v3/c2c/tradingOrders/books"
            f"?quoteCurrency={fiat}&baseCurrency=usdt&side={side}"
            "&userType=all&showTrade=false&showFollow=false&showAlreadyTraded=false&isAbleFilter=false")
-    d = _get(url)
-    prices = []
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=15) as r:
+            d = json.loads(r.read().decode())
+    except Exception:
+        return []
+    items = []
     for item in d.get("data", {}).get(side, []):
         try:
-            prices.append({"price": float(item.get("price")), "amount": float(item.get("availableAmount", 0))})
+            items.append({
+                "price": float(item.get("price")),
+                "amount": float(item.get("availableAmount", 0)),
+            })
         except (TypeError, ValueError):
             continue
-    return prices
+    return items
 
-def best(prices, want="min"):
-    """Median-anchored quotes: BUY = 25th pct, SELL = 75th pct.
-    First drop ads >15% off median (scam/market-maker noise), then percentile."""
+# ── Robust best ─────────────────────────────────────────────────
+def robust_best(prices, want="min"):
+    """MAD filter: drop ads >3 median abs dev, then percentile pick (25th/75th)."""
     if not prices:
         return None
     vals = sorted(p["price"] for p in prices)
@@ -61,67 +73,72 @@ def best(prices, want="min"):
         dm = len(devs) // 2
         mad = devs[dm] if len(devs) % 2 else (devs[dm - 1] + devs[dm]) / 2
         if mad > 0:
-            cutoff = 3 * mad
-            kept = [p for p in prices if abs(p["price"] - median) <= cutoff]
+            kept = [p for p in prices if abs(p["price"] - median) <= 3 * mad]
             if len(kept) >= 2:
                 prices = kept
                 vals = sorted(p["price"] for p in prices)
                 n = len(vals)
     idx = max(0, int(n * 0.25)) if want == "min" else min(n - 1, int(n * 0.75))
     target = vals[idx]
-    # pick the ad closest to target percentile with sane volume
     candidates = sorted(prices, key=lambda p: abs(p["price"] - target))
     for c in candidates:
-        if c["amount"] >= 50:  # prefer ads with real liquidity
+        if c["amount"] >= 50:
             return c
     return candidates[0]
 
+
 def main():
-    print(f"=== MULTI-EXCHANGE P2P ARBITRAGE SCAN {time.strftime('%Y-%m-%d %H:%M')} ===")
-    print("(BUY = price to buy USDT, SELL = price to sell USDT, same fiat)")
-    print("-" * 100)
+    print(f"=== P2P ARBITRAGE SCAN (Bybit + OKX) {time.strftime('%Y-%m-%d %H:%M')} ===")
+    print(f"{'FIAT':<5} {'Bybit BUY':>11} {'Bybit SELL':>12} {'OKX BUY':>9} {'OKX SELL':>10} | SPREAD")
+    print("-" * 95)
+
     results = []
     for fiat in FIATS:
-        row = {"fiat": fiat}
-        try:
-            bn_buy = best(binance_p2p(fiat, "BUY"), "min")
-            bn_sell = best(binance_p2p(fiat, "SELL"), "max")
-        except Exception as e:
-            bn_buy = bn_sell = None
-        time.sleep(0.3)
-        try:
-            ok_buy = best(okx_p2p(fiat, "buy"), "min")
-            ok_sell = best(okx_p2p(fiat, "sell"), "max")
-        except Exception as e:
-            ok_buy = ok_sell = None
-        time.sleep(0.3)
+        bb = bybit_p2p(fiat, "0", rows=10)  # BUY
+        time.sleep(0.25)
+        bs = bybit_p2p(fiat, "1", rows=10)  # SELL
+        time.sleep(0.25)
+        ob = okx_p2p(fiat, "buy")
+        time.sleep(0.25)
+        os_ = okx_p2p(fiat, "sell")
+        time.sleep(0.25)
+
+        bb_best = robust_best(bb, "min")
+        bs_best = robust_best(bs, "max")
+        ob_best = robust_best(ob, "min")
+        os_best = robust_best(os_, "max")
 
         line = f"{fiat:<5}"
-        if bn_buy: line += f" BN_Buy {bn_buy['price']:>10.2f}"
-        if bn_sell: line += f" BN_Sell {bn_sell['price']:>10.2f}"
-        if ok_buy: line += f" OK_Buy {ok_buy['price']:>10.2f}"
-        if ok_sell: line += f" OK_Sell {ok_sell['price']:>10.2f}"
+        line += f" {bb_best['price']:>10.2f}" if bb_best else f" {'N/A':>10}"
+        line += f" {bs_best['price']:>11.2f}" if bs_best else f" {'N/A':>11}"
+        line += f" {ob_best['price']:>8.2f}" if ob_best else f" {'N/A':>8}"
+        line += f" {os_best['price']:>9.2f}" if os_best else f" {'N/A':>9}"
 
-        # Cross-exchange arb: buy on cheaper, sell on more expensive
-        buys = [("BN", bn_buy), ("OK", ok_buy)]
-        sells = [("BN", bn_sell), ("OK", ok_sell)]
-        buys = [(x, p) for x, p in buys if p]
-        sells = [(x, p) for x, p in sells if p]
-        if buys and sells:
-            buy_x, buy_p = min(buys, key=lambda t: t[1]["price"])
-            sell_x, sell_p = max(sells, key=lambda t: t[1]["price"])
+        row = {"fiat": fiat}
+        # All BUY prices from both exchanges
+        all_buy = []
+        all_sell = []
+        if bb_best: all_buy.append(("Bybit", bb_best))
+        if ob_best: all_buy.append(("OKX", ob_best))
+        if bs_best: all_sell.append(("Bybit", bs_best))
+        if os_best: all_sell.append(("OKX", os_best))
+
+        if all_buy and all_sell:
+            buy_ex, buy_p = min(all_buy, key=lambda t: t[1]["price"])
+            sell_ex, sell_p = max(all_sell, key=lambda t: t[1]["price"])
             spread = (sell_p["price"] - buy_p["price"]) / buy_p["price"] * 100
-            net = spread - 1.0  # fees ~0.5% each side + slippage
-            flag = " <== ARB!" if net > 1.0 else ""
-            line += f" | X-ARB {buy_x}->{sell_x}: {spread:.2f}% (net~{net:.2f}%){flag}"
-            row["xarb"] = {"buy_ex": buy_x, "sell_ex": sell_x, "buy": buy_p["price"],
-                           "sell": sell_p["price"], "spread_pct": round(spread, 2), "net_pct": round(net, 2)}
+            net = spread - 1.0
+            flag = " <== ARB!" if net > 1.5 else ""
+            line += f" | {buy_ex}→{sell_ex} {spread:+.2f}% net~{net:+.2f}%{flag}"
+            row["xarb"] = {"buy_ex": buy_ex, "sell_ex": sell_ex,
+                           "spread_pct": round(spread, 2), "net_pct": round(net, 2)}
         print(line)
         results.append(row)
 
     with open("scan_result.json", "w") as f:
-        json.dump({"time": time.time(), "results": results}, f, indent=2)
+        json.dump({"time": time.time(), "exchanges": ["Bybit", "OKX"], "results": results}, f, indent=2)
     print("\nSaved to scan_result.json")
+
 
 if __name__ == "__main__":
     main()

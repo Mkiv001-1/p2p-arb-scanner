@@ -1,172 +1,179 @@
 {
-  "time": 1786216827.4051635,
+  "time": 1786218693.2984502,
+  "exchanges": [
+    "Bybit",
+    "OKX"
+  ],
   "results": [
     {
-      "fiat": "RUB"
+      "fiat": "RUB",
+      "xarb": {
+        "buy_ex": "Bybit",
+        "sell_ex": "Bybit",
+        "spread_pct": -17.62,
+        "net_pct": -18.62
+      }
     },
     {
       "fiat": "KZT",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 436.2,
-        "sell": 514.0,
-        "spread_pct": 17.84,
-        "net_pct": 16.84
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 13.33,
+        "net_pct": 12.33
       }
     },
     {
       "fiat": "UAH",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "BN",
-        "buy": 44.0,
-        "sell": 47.22,
-        "spread_pct": 7.32,
-        "net_pct": 6.32
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 5.1,
+        "net_pct": 4.1
       }
     },
     {
       "fiat": "TRY",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 42.0,
-        "sell": 56.39,
-        "spread_pct": 34.26,
-        "net_pct": 33.26
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 28.7,
+        "net_pct": 27.7
       }
     },
     {
       "fiat": "VND",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 24632.0,
-        "sell": 27999.0,
-        "spread_pct": 13.67,
-        "net_pct": 12.67
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 5.42,
+        "net_pct": 4.42
       }
     },
     {
       "fiat": "BYN",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 2.3,
-        "sell": 3.22,
-        "spread_pct": 40.0,
-        "net_pct": 39.0
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 27.27,
+        "net_pct": 26.27
       }
     },
     {
       "fiat": "GEL",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 2.4,
-        "sell": 2.7,
-        "spread_pct": 12.5,
-        "net_pct": 11.5
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 8.5,
+        "net_pct": 7.5
       }
     },
     {
       "fiat": "AZN",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 1.45,
-        "sell": 1.73,
-        "spread_pct": 19.31,
-        "net_pct": 18.31
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 14.57,
+        "net_pct": 13.57
       }
     },
     {
       "fiat": "KGS",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 78.11,
-        "sell": 95.77,
-        "spread_pct": 22.61,
-        "net_pct": 21.61
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 9.3,
+        "net_pct": 8.3
       }
     },
     {
       "fiat": "AMD",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 327.94,
-        "sell": 399.0,
-        "spread_pct": 21.67,
-        "net_pct": 20.67
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 9.94,
+        "net_pct": 8.94
       }
     },
     {
       "fiat": "KES",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 119.0,
-        "sell": 155.22,
-        "spread_pct": 30.44,
-        "net_pct": 29.44
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 6.9,
+        "net_pct": 5.9
       }
     },
     {
       "fiat": "TZS",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 2232.2,
-        "sell": 3048.74,
-        "spread_pct": 36.58,
-        "net_pct": 35.58
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 10.21,
+        "net_pct": 9.21
       }
     },
     {
       "fiat": "PLN",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 3.28,
-        "sell": 4.25,
-        "spread_pct": 29.57,
-        "net_pct": 28.57
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 17.65,
+        "net_pct": 16.65
       }
     },
     {
       "fiat": "EUR",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 0.781,
-        "sell": 1.0,
-        "spread_pct": 28.04,
-        "net_pct": 27.04
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 21.03,
+        "net_pct": 20.03
       }
     },
     {
       "fiat": "USD",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "BN",
-        "buy": 0.981,
-        "sell": 1.1,
-        "spread_pct": 12.13,
-        "net_pct": 11.13
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 8.05,
+        "net_pct": 7.05
       }
     },
     {
       "fiat": "NGN",
       "xarb": {
-        "buy_ex": "OK",
-        "sell_ex": "OK",
-        "buy": 1350.0,
-        "sell": 1405.0,
-        "spread_pct": 4.07,
-        "net_pct": 3.07
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 1.3,
+        "net_pct": 0.3
+      }
+    },
+    {
+      "fiat": "INR",
+      "xarb": {
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 31.11,
+        "net_pct": 30.11
+      }
+    },
+    {
+      "fiat": "BRL",
+      "xarb": {
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 65.86,
+        "net_pct": 64.86
+      }
+    },
+    {
+      "fiat": "ARS",
+      "xarb": {
+        "buy_ex": "OKX",
+        "sell_ex": "OKX",
+        "spread_pct": 9.92,
+        "net_pct": 8.92
       }
     }
   ]
