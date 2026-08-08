@@ -55,10 +55,10 @@ def best(prices, want="min"):
     vals = sorted(p["price"] for p in prices)
     n = len(vals)
     if want == "min":
-        idx = max(0, n // 4 - 1)  # 25th percentile
+        idx = max(0, int(n * 0.25))  # 25th percentile
         target = vals[idx]
     else:
-        idx = min(n - 1, 3 * n // 4)  # 75th percentile
+        idx = min(n - 1, int(n * 0.75))  # 75th percentile
         target = vals[idx]
     # pick the ad closest to target percentile with sane volume
     candidates = sorted(prices, key=lambda p: abs(p["price"] - target))
