@@ -48,18 +48,27 @@ def okx_p2p(fiat, side):
     return prices
 
 def best(prices, want="min"):
-    """Use median-anchored quotes: BUY = 25th percentile, SELL = 75th percentile.
-    Median is robust against scam/market-maker ads with absurd prices."""
+    """Median-anchored quotes: BUY = 25th pct, SELL = 75th pct.
+    First drop ads >15% off median (scam/market-maker noise), then percentile."""
     if not prices:
         return None
     vals = sorted(p["price"] for p in prices)
     n = len(vals)
-    if want == "min":
-        idx = max(0, int(n * 0.25))  # 25th percentile
-        target = vals[idx]
-    else:
-        idx = min(n - 1, int(n * 0.75))  # 75th percentile
-        target = vals[idx]
+    if n >= 4:
+        mid = n // 2
+        median = vals[mid] if n % 2 else (vals[mid - 1] + vals[mid]) / 2
+        devs = sorted(abs(v - median) for v in vals)
+        dm = len(devs) // 2
+        mad = devs[dm] if len(devs) % 2 else (devs[dm - 1] + devs[dm]) / 2
+        if mad > 0:
+            cutoff = 3 * mad
+            kept = [p for p in prices if abs(p["price"] - median) <= cutoff]
+            if len(kept) >= 2:
+                prices = kept
+                vals = sorted(p["price"] for p in prices)
+                n = len(vals)
+    idx = max(0, int(n * 0.25)) if want == "min" else min(n - 1, int(n * 0.75))
+    target = vals[idx]
     # pick the ad closest to target percentile with sane volume
     candidates = sorted(prices, key=lambda p: abs(p["price"] - target))
     for c in candidates:
