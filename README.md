@@ -1,5 +1,12 @@
 # P2P Arbitrage Scanner (Binance + OKX)
 
+> ⚠️ **Legal notice (Russia)**: P2P crypto arbitrage involving receiving fiat from
+> strangers on personal bank cards is restricted/illegal in the Russian Federation
+> (115-ФЗ anti-money-laundering card blocks, 161-ФЗ account freezes, 187 УК РФ —
+> up to 2 years for "dropper" activity). This repository is provided **for
+> educational and research purposes only**. Do not use it to execute P2P arbitrage
+> from Russia or with personal banking rails.
+
 Real-time scanner for P2P USDT arbitrage opportunities across Binance and OKX.
 Detects intra-exchange (BUY vs SELL) and cross-exchange spreads per fiat currency.
 
